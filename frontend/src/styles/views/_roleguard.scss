@@ -1,0 +1,7 @@
+@use "../tokens" as *;
+@use "../mixins" as *;
+
+// RoleGuard is a pure auth/role wrapper with no presentational markup —
+// it renders only `children` or `fallback`. No styles required.
+@layer components {
+}

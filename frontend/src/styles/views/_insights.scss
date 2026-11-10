@@ -1,0 +1,68 @@
+@use "../tokens" as *;
+@use "../mixins" as *;
+
+@layer components {
+  /* ── Insights — page stack ─────────────────────── */
+  .in-page { @apply space-y-8; }
+
+  /* ── Insights — selector form ──────────────────── */
+  .in-selector {
+    @apply flex gap-3;
+  }
+  .in-selector__input {
+    @apply flex-1 px-4 py-2.5 text-sm rounded-xl bg-white text-slate-700;
+    border: 1px solid $line;
+    box-shadow: $shadow-sm;
+    @include focus-ring;
+
+    &::placeholder { @apply text-slate-400; }
+  }
+  .in-selector__btn {
+    @apply text-white font-semibold;
+    background: $grad-brand;
+    box-shadow: $shadow-sm;
+
+    &:hover { box-shadow: $glow-brand; }
+  }
+
+  /* ── Insights — composed sections ──────────────── */
+  .in-sections { @apply space-y-6; }
+  .in-duo      { @apply grid grid-cols-1 lg:grid-cols-2 gap-6; }
+
+  .in-section-title {
+    @apply text-xs font-semibold uppercase mb-3 text-slate-500;
+    letter-spacing: 0.12em;
+  }
+
+  /* ── Insights — splash / empty surface ─────────── */
+  .in-splash {
+    @apply rounded-2xl p-12 text-center bg-white;
+    border: 1px dashed $line-2;
+    box-shadow: $shadow-sm;
+  }
+  .in-splash__icon {
+    @apply text-3xl mb-3;
+    line-height: 1;
+  }
+  .in-splash__lead {
+    @apply text-sm font-medium text-slate-600;
+  }
+
+  .in-feature-grid {
+    @apply mt-6 grid grid-cols-2 gap-4 mx-auto text-left;
+    max-width: 24rem;
+  }
+  .in-feature {
+    @apply rounded-xl p-3;
+    background: linear-gradient(180deg, #f8fafc, #fff 70%);
+    border: 1px solid $line;
+    box-shadow: $shadow-sm;
+    @include hover-lift($shadow-md);
+  }
+  .in-feature__title {
+    @apply text-xs font-semibold text-slate-800;
+  }
+  .in-feature__desc {
+    @apply text-xs text-slate-500 mt-0.5;
+  }
+}

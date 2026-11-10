@@ -1,0 +1,99 @@
+@use "../tokens" as *;
+@use "../mixins" as *;
+
+@layer components {
+
+  /* ── Composite SNS score card ──────────────────── */
+  .cs-card {
+    @apply relative bg-white rounded-2xl p-5 overflow-hidden;
+    border: 1px solid $line;
+    box-shadow: $shadow-sm;
+
+    &::before {
+      content: "";
+      @apply absolute left-0 top-0 h-full;
+      width: 4px;
+      background: $grad-brand;
+    }
+  }
+
+  .cs-skeleton {
+    @apply rounded-2xl;
+    height: 12rem;
+    background: linear-gradient(100deg, #eef2f6 30%, #f8fafc 50%, #eef2f6 70%);
+    background-size: 200% 100%;
+    animation: cs-shimmer 1.4s ease-in-out infinite;
+  }
+
+  /* ── Header ────────────────────────────────────── */
+  .cs-header { @apply flex items-center justify-between mb-4; }
+  .cs-label  {
+    @apply text-xs font-semibold uppercase text-slate-500;
+    letter-spacing: 0.1em;
+  }
+  .cs-value {
+    @apply mt-0.5 text-3xl font-bold tabular-nums text-slate-900 leading-none;
+  }
+  .cs-value__unit { @apply text-base font-normal text-slate-400; }
+
+  .cs-badge {
+    @apply inline-flex items-center rounded-full px-3 py-1 text-sm font-semibold uppercase text-white;
+    letter-spacing: 0.04em;
+    box-shadow: $shadow-sm;
+
+    &--critical { background: $grad-critical; }
+    &--high     { background: $grad-high; }
+    &--medium   { background: $grad-medium; @apply text-slate-900; }
+    &--low      { background: $grad-low; }
+  }
+
+  /* ── Overall score bar ─────────────────────────── */
+  .cs-bar {
+    @apply h-2 w-full rounded-full overflow-hidden mb-5;
+    background: #eef2f6;
+  }
+  .cs-bar__fill {
+    @apply h-full rounded-full;
+    transition: width .5s ease;
+
+    &--critical { background: $grad-critical; }
+    &--high     { background: $grad-high; }
+    &--medium   { background: $grad-medium; }
+    &--low      { background: $grad-low; }
+  }
+
+  /* ── Component breakdown ───────────────────────── */
+  .cs-breakdown { @apply space-y-3 text-sm; }
+
+  .cs-row     { @apply flex items-center gap-3; }
+  .cs-row__main { @apply flex-1 min-w-0; }
+  .cs-row__label {
+    @apply text-xs text-slate-500 truncate;
+  }
+  .cs-row__track {
+    @apply mt-1 w-full rounded-full overflow-hidden;
+    height: 6px;
+    background: #eef2f6;
+  }
+  .cs-row__fill {
+    @apply h-full rounded-full;
+    transition: width .5s ease;
+
+    &--ml     { background: linear-gradient(90deg, #60a5fa, #2563eb); }
+    &--qsofa  { background: linear-gradient(90deg, #c084fc, #7c3aed); }
+    &--sofa   { background: linear-gradient(90deg, #fbbf24, #d97706); }
+  }
+  .cs-row__val {
+    @apply text-xs font-mono font-semibold text-right tabular-nums text-slate-700;
+    width: 3rem;
+  }
+
+  /* ── Footnotes ─────────────────────────────────── */
+  .cs-note { @apply mt-3 text-xs text-slate-400; }
+  .cs-note__strong { @apply font-semibold text-slate-600; }
+  .cs-note__warn   { @apply ml-2 font-medium; color: #ef4444; }
+  .cs-formula      { @apply mt-3 text-xs text-slate-400; }
+}
+
+// ── Keyframes ────────────────────────────────────
+@keyframes cs-shimmer { to { background-position: -200% 0; } }

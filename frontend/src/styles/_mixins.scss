@@ -1,0 +1,40 @@
+// ════════════════════════════════════════════════════════════
+// SepNova — SCSS Mixins
+// ════════════════════════════════════════════════════════════
+@use "tokens" as *;
+
+// Clip a gradient to text (modern gradient headings / brand marks)
+@mixin gradient-text($grad: $grad-brand) {
+  background: $grad;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+// Subtle lift on hover — used by cards
+@mixin hover-lift($shadow: $shadow-lg) {
+  transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease;
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: $shadow;
+  }
+}
+
+// Frosted-glass surface
+@mixin glass($bg: rgba(255, 255, 255, .8), $blur: 16px) {
+  background: $bg;
+  backdrop-filter: saturate(160%) blur($blur);
+  -webkit-backdrop-filter: saturate(160%) blur($blur);
+}
+
+// Accessible focus ring for inputs / controls
+@mixin focus-ring($color: rgba(14, 165, 233, .45)) {
+  &:focus,
+  &:focus-visible {
+    outline: none;
+    border-color: transparent;
+    box-shadow: 0 0 0 3px $color;
+  }
+}

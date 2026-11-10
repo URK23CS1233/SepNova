@@ -1,0 +1,114 @@
+@use "../tokens" as *;
+@use "../mixins" as *;
+
+@layer components {
+  /* ── Fairness audit card ───────────────────────── */
+  .fr-card {
+    @apply relative bg-white rounded-2xl p-5 overflow-hidden;
+    border: 1px solid $line;
+    box-shadow: $shadow-sm;
+    @include hover-lift($shadow-md);
+
+    &::before {
+      content: "";
+      @apply absolute left-0 top-0 w-full;
+      height: 4px;
+      background: $grad-brand;
+    }
+  }
+
+  .fr-card--skeleton {
+    @apply rounded-2xl;
+    height: 20rem;
+    border: 1px solid $line;
+    background: linear-gradient(100deg, #eef2f6 30%, #f8fafc 50%, #eef2f6 70%);
+    background-size: 200% 100%;
+    animation: fr-shimmer 1.4s ease-in-out infinite;
+  }
+
+  /* ── Header ────────────────────────────────────── */
+  .fr-header { @apply flex items-center justify-between mb-4; }
+
+  .fr-eyebrow {
+    @apply font-semibold uppercase text-slate-500;
+    font-size: 11px;
+    letter-spacing: .12em;
+  }
+
+  .fr-overall {
+    @apply text-sm text-slate-600;
+    margin-top: 2px;
+
+    strong { @apply font-semibold text-slate-900; }
+  }
+
+  /* ── Status pill ───────────────────────────────── */
+  .fr-status {
+    @apply inline-flex items-center gap-1.5 rounded-full font-semibold;
+    padding: 4px 12px;
+    font-size: 12px;
+    border: 1px solid transparent;
+    box-shadow: $shadow-sm;
+
+    &--ok   { color: #047857; background: #ecfdf5; border-color: #a7f3d0; }
+    &--fail { color: #b91c1c; background: #fef2f2; border-color: #fecaca; }
+  }
+
+  /* ── Flagged warning banner ────────────────────── */
+  .fr-flagged {
+    @apply mb-4 rounded-xl p-3 text-xs text-red-700;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+
+    strong { @apply font-semibold; }
+  }
+
+  /* ── Radar chart wrapper ───────────────────────── */
+  .fr-chart { height: 14rem; }
+
+  /* ── Subgroup table ────────────────────────────── */
+  .fr-table-wrap { @apply mt-4 overflow-x-auto; }
+
+  .fr-table {
+    @apply w-full text-xs text-left;
+    border-collapse: collapse;
+  }
+
+  .fr-table__head-row {
+    @apply text-slate-400;
+    border-bottom: 1px solid $line;
+
+    th {
+      @apply pb-2 pr-4 font-medium;
+      &:last-child { @apply pr-0; }
+    }
+  }
+
+  .fr-table__th--num { @apply text-right; }
+
+  .fr-row {
+    border-bottom: 1px solid #f1f5f9;
+    transition: background .16s ease;
+
+    &:hover { background: #f8fafc; }
+
+    td {
+      @apply py-2 pr-4;
+      &:last-child { @apply pr-0; }
+    }
+  }
+
+  .fr-row--flagged { @apply text-red-600; }
+
+  .fr-cell--name { @apply font-medium text-slate-700; }
+  .fr-cell--num  { @apply text-right tabular-nums; }
+  .fr-cell--auroc { @apply text-right tabular-nums font-semibold; }
+  .fr-cell__warn { @apply mr-1; }
+
+  .fr-criteria { @apply mt-2 text-xs text-slate-400; }
+}
+
+@keyframes fr-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}

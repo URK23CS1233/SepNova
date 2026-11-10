@@ -1,0 +1,82 @@
+@use "../tokens" as *;
+@use "../mixins" as *;
+
+@layer components {
+
+  /* ── Back link ─────────────────────────────────── */
+  .pt-back {
+    @apply inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 mb-5;
+    transition: color .18s ease, transform .18s ease;
+
+    &:hover { @apply text-slate-900; transform: translateX(-2px); }
+  }
+
+  /* ── Patient header ────────────────────────────── */
+  .pt-header { @apply flex items-start justify-between gap-4 mb-6; }
+  .pt-title  { @apply text-2xl font-bold tracking-tight; @include gradient-text($grad-title); }
+  .pt-meta   { @apply text-sm text-slate-500 mt-1; }
+
+  /* ── Stats grid ────────────────────────────────── */
+  .pt-stats { @apply grid grid-cols-2 md:grid-cols-4 gap-4 mb-6; }
+
+  /* ── Tabs ──────────────────────────────────────── */
+  .pt-tabs {
+    @apply flex gap-6 mb-6;
+    border-bottom: 1px solid $line;
+  }
+  .pt-tab {
+    @apply pb-3 text-sm font-medium capitalize;
+    border-bottom: 2px solid transparent;
+    color: #64748b;
+    transition: color .18s ease, border-color .18s ease;
+
+    &:hover { @apply text-slate-700; }
+  }
+  .pt-tab--active {
+    color: #0284c7;
+    border-bottom-color: #0ea5e9;
+  }
+  .pt-tab__inner { @apply flex items-center gap-1.5; }
+
+  /* ── Chart cards ───────────────────────────────── */
+  .pt-charts { @apply space-y-6; }
+  .pt-chart-card {
+    @apply bg-white rounded-2xl p-5;
+    border: 1px solid $line;
+    box-shadow: $shadow-sm;
+    @include hover-lift($shadow-md);
+  }
+  .pt-chart-title {
+    @apply flex items-center gap-2 text-sm font-semibold text-slate-700 mb-4;
+
+    &::before {
+      content: "";
+      width: 4px;
+      height: 16px;
+      border-radius: $radius-pill;
+      background: $grad-brand;
+    }
+  }
+
+  /* ── Risk-history empty ────────────────────────── */
+  .pt-chart-empty { @apply text-sm text-slate-400 text-center py-10; }
+
+  /* ── Not-found / loading ───────────────────────── */
+  .pt-notfound {
+    @apply p-6 text-sm font-medium;
+    color: #ef4444;
+  }
+  .pt-loading { @apply p-6 space-y-4; }
+  .pt-skeleton {
+    @apply rounded-2xl;
+    background: linear-gradient(100deg, #eef2f6 30%, #f8fafc 50%, #eef2f6 70%);
+    background-size: 200% 100%;
+    animation: pt-shimmer 1.4s ease-in-out infinite;
+
+    &--title { @apply h-8 w-48; }
+    &--block { @apply h-40 w-full; }
+  }
+}
+
+/* ── Keyframes ──────────────────────────────────── */
+@keyframes pt-shimmer { to { background-position: -200% 0; } }

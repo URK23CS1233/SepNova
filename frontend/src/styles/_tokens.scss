@@ -1,0 +1,36 @@
+// ════════════════════════════════════════════════════════════
+// SepNova — Design Tokens (SCSS authoring variables)
+// Runtime CSS custom properties live in globals.scss :root.
+// ════════════════════════════════════════════════════════════
+
+// ── Brand gradients ───────────────────────────────
+$grad-brand:      linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%);
+$grad-brand-glow: linear-gradient(135deg, #38bdf8 0%, #6366f1 100%);
+$grad-sidebar:    linear-gradient(180deg, #0f172a 0%, #131f37 55%, #0b1322 100%);
+$grad-app:
+  radial-gradient(1100px 560px at 100% -8%, rgba(186, 230, 253, .55) 0%, rgba(186, 230, 253, 0) 55%),
+  radial-gradient(900px 500px at -5% 110%, rgba(199, 210, 254, .35) 0%, rgba(199, 210, 254, 0) 55%),
+  linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
+$grad-title:      linear-gradient(120deg, #0f172a 0%, #334155 100%);
+
+// ── Risk gradients ────────────────────────────────
+$grad-critical: linear-gradient(90deg, #ef4444, #b91c1c);
+$grad-high:     linear-gradient(90deg, #fb923c, #ea580c);
+$grad-medium:   linear-gradient(90deg, #fbbf24, #d97706);
+$grad-low:      linear-gradient(90deg, #4ade80, #16a34a);
+
+// ── Surfaces & lines ──────────────────────────────
+$surface: #ffffff;
+$line:    #e7edf4;
+$line-2:  #cbd5e1;
+
+// ── Radii ─────────────────────────────────────────
+$radius-card: 16px;
+$radius-md:   12px;
+$radius-pill: 999px;
+
+// ── Shadows ───────────────────────────────────────
+$shadow-sm:  0 1px 2px rgba(15, 23, 42, .06);
+$shadow-md:  0 6px 20px -6px rgba(15, 23, 42, .12);
+$shadow-lg:  0 18px 42px -12px rgba(15, 23, 42, .22);
+$glow-brand: 0 8px 24px -6px rgba(37, 99, 235, .45);

@@ -1,0 +1,140 @@
+@use "../tokens" as *;
+@use "../mixins" as *;
+
+@layer components {
+  /* ── Multi-horizon panel shell ─────────────────── */
+  .mh-panel {
+    @apply rounded-2xl bg-white p-5;
+    border: 1px solid $line;
+    box-shadow: $shadow-sm;
+  }
+
+  .mh-panel__title {
+    @apply font-semibold uppercase text-slate-400 mb-4;
+    font-size: 11px;
+    letter-spacing: .12em;
+  }
+
+  .mh-grid {
+    @apply grid grid-cols-1 gap-3 sm:grid-cols-3;
+  }
+
+  /* ── Horizon tile ──────────────────────────────── */
+  .mh-card {
+    @apply rounded-2xl p-4;
+    border: 1px solid $line;
+    box-shadow: $shadow-sm;
+    @include hover-lift($shadow-md);
+
+    &--high {
+      background: linear-gradient(180deg, #fef2f2, #fff 62%);
+      border-color: #fecaca;
+    }
+    &--medium {
+      background: linear-gradient(180deg, #fff7ed, #fff 62%);
+      border-color: #fed7aa;
+    }
+    &--low {
+      background: linear-gradient(180deg, #f0f9ff, #fff 62%);
+      border-color: #bae6fd;
+    }
+  }
+
+  .mh-card--empty {
+    @apply rounded-2xl p-4 text-center;
+    border: 1px dashed $line-2;
+    background: #fff;
+  }
+
+  .mh-card__head {
+    @apply flex items-center justify-between mb-2;
+  }
+
+  .mh-card__icon {
+    @apply text-base leading-none;
+  }
+
+  .mh-card__label {
+    @apply font-semibold text-sm text-slate-800;
+  }
+
+  .mh-card__desc {
+    @apply text-xs text-slate-500;
+    margin-top: 2px;
+  }
+
+  .mh-card__empty-label {
+    @apply text-xs text-slate-400;
+  }
+
+  .mh-card__empty-msg {
+    @apply text-xs text-slate-400 mt-1;
+  }
+
+  /* ── Status badges ─────────────────────────────── */
+  .mh-badge {
+    @apply inline-flex items-center rounded-full font-semibold text-white;
+    padding: 2px 8px;
+    font-size: 11px;
+    letter-spacing: .04em;
+
+    &--high   { background: $grad-critical; }
+    &--medium { background: $grad-high; }
+    &--low    { background: $grad-brand; }
+  }
+
+  .mh-badge--neg {
+    @apply inline-flex items-center rounded-full text-slate-400 bg-slate-100;
+    padding: 2px 8px;
+    font-size: 11px;
+  }
+
+  /* ── Risk value row ────────────────────────────── */
+  .mh-value-row {
+    @apply mt-3 flex items-end justify-between;
+  }
+
+  .mh-value {
+    @apply text-2xl font-bold text-slate-900 tabular-nums leading-none;
+  }
+
+  .mh-value__unit {
+    @apply text-sm font-normal text-slate-400;
+  }
+
+  .mh-threshold {
+    @apply text-xs text-slate-400;
+  }
+
+  /* ── Mini progress bar ─────────────────────────── */
+  .mh-bar {
+    @apply mt-2 w-full rounded-full overflow-hidden;
+    height: 6px;
+    background: #eef2f6;
+  }
+
+  .mh-bar__fill {
+    @apply h-full rounded-full;
+    transition: width .5s ease;
+    background: #cbd5e1;
+
+    &--high   { background: $grad-critical; }
+    &--medium { background: $grad-high; }
+    &--low    { background: $grad-brand; }
+  }
+
+  /* ── Loading skeleton ──────────────────────────── */
+  .mh-skeleton {
+    @apply rounded-2xl;
+    height: 11rem;
+    border: 1px solid $line;
+    background: linear-gradient(100deg, #eef2f6 30%, #f8fafc 50%, #eef2f6 70%);
+    background-size: 200% 100%;
+    animation: mh-shimmer 1.4s ease-in-out infinite;
+  }
+}
+
+@keyframes mh-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}

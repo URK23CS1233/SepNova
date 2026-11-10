@@ -1,0 +1,425 @@
+// ════════════════════════════════════════════════════════════
+// SepNova — Global Styles + Component Design System
+// ════════════════════════════════════════════════════════════
+@use "../styles/tokens" as *;
+@use "../styles/mixins" as *;
+
+// View partials — page/component-specific semantic classes (one file per view)
+@use "../styles/views/patient";
+@use "../styles/views/alerts";
+@use "../styles/views/results";
+@use "../styles/views/admin";
+@use "../styles/views/insights";
+@use "../styles/views/composite";
+@use "../styles/views/multihorizon";
+@use "../styles/views/explanation";
+@use "../styles/views/fairness";
+@use "../styles/views/roleguard";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+// ── Base ──────────────────────────────────────────────────────
+@layer base {
+  :root {
+    --background: 210 40% 98%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 199 89% 48%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 199 89% 48%;
+    --radius: 0.5rem;
+  }
+
+  * { @apply border-border; }
+
+  body {
+    @apply text-foreground font-sans antialiased;
+    min-height: 100vh;
+    background: $grad-app;
+    background-attachment: fixed;
+  }
+}
+
+// ── Components ────────────────────────────────────────────────
+@layer components {
+
+  /* ── App shell ─────────────────────────────────── */
+  .app-shell { @apply flex h-screen overflow-hidden; }
+  .app-main  { @apply flex-1 overflow-auto; }
+
+  /* ── Sidebar ───────────────────────────────────── */
+  .sidebar {
+    @apply w-60 flex flex-col flex-shrink-0 text-slate-300 relative;
+    background: $grad-sidebar;
+    border-right: 1px solid rgba(148, 163, 184, .12);
+  }
+  .sidebar__brand {
+    @apply flex items-center gap-3 px-5 pt-6 pb-5;
+    border-bottom: 1px solid rgba(148, 163, 184, .12);
+  }
+  .sidebar__brand-mark {
+    @apply h-10 w-10 rounded-xl flex items-center justify-center text-white flex-shrink-0;
+    background: $grad-brand;
+    box-shadow: $glow-brand;
+  }
+  .sidebar__title    { @apply text-lg font-semibold tracking-tight text-white leading-none; }
+  .sidebar__subtitle { @apply text-xs text-slate-400 mt-1; }
+
+  .sidebar__nav { @apply flex-1 px-3 py-4 space-y-1; }
+
+  .nav-link {
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-300;
+    transition: background-color .18s ease, color .18s ease, transform .18s ease;
+
+    &:hover { color: #fff; background: rgba(148, 163, 184, .10); }
+    &__icon { height: 18px; width: 18px; flex-shrink: 0; }
+  }
+  .nav-link--active {
+    color: #fff;
+    background: $grad-brand;
+    box-shadow: $glow-brand;
+
+    &:hover { background: $grad-brand; }
+  }
+
+  .sidebar__footer {
+    @apply p-3;
+    border-top: 1px solid rgba(148, 163, 184, .12);
+  }
+  .user-card {
+    @apply flex items-center gap-2.5 px-2.5 py-2.5 rounded-xl mb-2;
+    background: rgba(148, 163, 184, .10);
+  }
+  .user-card__avatar {
+    @apply h-8 w-8 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0;
+
+    &--intensivist      { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+    &--surgeon          { background: linear-gradient(135deg, #22c55e, #16a34a); }
+    &--nurse            { background: linear-gradient(135deg, #ec4899, #db2777); }
+    &--anesthesiologist { background: linear-gradient(135deg, #a855f7, #7c3aed); }
+    &--lab_technician   { background: linear-gradient(135deg, #fb923c, #ea580c); }
+    &--admin            { background: linear-gradient(135deg, #64748b, #475569); }
+  }
+  .user-card__name { @apply text-xs font-semibold text-white truncate; }
+  .user-card__role { @apply text-slate-400 capitalize; font-size: 11px; }
+
+  .signout-btn {
+    @apply w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium text-slate-400;
+    transition: background-color .18s ease, color .18s ease;
+
+    &:hover { color: #fff; background: rgba(148, 163, 184, .10); }
+  }
+
+  /* ── Page scaffold ─────────────────────────────── */
+  .page          { @apply p-6 lg:p-8 max-w-7xl mx-auto; }
+  .page-header   { @apply flex items-start justify-between gap-4 mb-7; }
+  .page-title    { @apply text-2xl font-bold tracking-tight; @include gradient-text($grad-title); }
+  .page-subtitle { @apply text-sm text-slate-500 mt-1; }
+
+  /* ── Buttons ───────────────────────────────────── */
+  .btn {
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium;
+    transition: all .18s ease;
+  }
+  .btn--ghost {
+    @apply text-slate-600 bg-white;
+    border: 1px solid $line;
+    box-shadow: $shadow-sm;
+
+    &:hover { @apply text-slate-900; border-color: $line-2; box-shadow: $shadow-md; }
+  }
+
+  /* ── Stat cards ────────────────────────────────── */
+  .stats-grid { @apply grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8; }
+  .stat-card {
+    @apply relative rounded-2xl p-4 overflow-hidden;
+    border: 1px solid $line;
+    box-shadow: $shadow-sm;
+    @include hover-lift($shadow-md);
+
+    &::before { content: ""; @apply absolute left-0 top-0 h-full; width: 4px; }
+
+    &--blue   { background: linear-gradient(180deg, #f0f9ff, #fff 62%); &::before { background: $grad-brand;    } }
+    &--red    { background: linear-gradient(180deg, #fef2f2, #fff 62%); &::before { background: $grad-critical; } }
+    &--orange { background: linear-gradient(180deg, #fff7ed, #fff 62%); &::before { background: $grad-high;     } }
+    &--yellow { background: linear-gradient(180deg, #fefce8, #fff 62%); &::before { background: $grad-medium;   } }
+    &--green  { background: linear-gradient(180deg, #f0fdf4, #fff 62%); &::before { background: $grad-low;      } }
+  }
+  .stat-card__label { @apply font-semibold uppercase tracking-wider text-slate-400; font-size: 11px; }
+  .stat-card__value { @apply mt-1.5 text-3xl font-bold text-slate-900 leading-none; }
+  .stat-card__sub   { @apply mt-1 text-xs text-slate-400; }
+
+  /* ── Toolbar / search / filters ────────────────── */
+  .toolbar { @apply flex flex-wrap items-center gap-3 mb-6; }
+
+  .search { @apply relative flex-1 max-w-xs; min-width: 200px; }
+  .search__icon {
+    @apply absolute top-1/2 h-4 w-4 text-slate-400;
+    left: 14px; transform: translateY(-50%); pointer-events: none;
+  }
+  .search__input {
+    @apply w-full pl-10 pr-3 py-2.5 text-sm rounded-xl bg-white text-slate-700;
+    border: 1px solid $line;
+    box-shadow: $shadow-sm;
+    @include focus-ring;
+
+    &::placeholder { @apply text-slate-400; }
+  }
+
+  .filter-group {
+    @apply flex items-center gap-1 p-1 rounded-xl bg-white;
+    border: 1px solid $line;
+    box-shadow: $shadow-sm;
+  }
+  .filter-pill {
+    @apply px-3 py-1.5 rounded-lg text-xs font-semibold capitalize text-slate-500;
+    transition: all .16s ease;
+
+    &:hover { @apply text-slate-800; }
+  }
+  .filter-pill--active {
+    color: #fff;
+    background: $grad-brand;
+    box-shadow: $shadow-sm;
+  }
+
+  /* ── Patient grid / cards ──────────────────────── */
+  .patient-grid { @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4; }
+
+  .patient-card {
+    @apply block bg-white rounded-2xl p-4;
+    border: 1px solid $line;
+    box-shadow: $shadow-sm;
+    @include hover-lift($shadow-md);
+
+    &:hover { border-color: #bae6fd; }
+  }
+  .patient-card__head     { @apply flex items-start justify-between mb-3; }
+  .patient-card__id-group { @apply flex items-center gap-2.5; }
+  .patient-card__avatar {
+    @apply h-9 w-9 rounded-xl flex items-center justify-center flex-shrink-0 text-slate-500;
+    background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+  }
+  .patient-card__id   { @apply font-semibold text-sm text-slate-900 leading-none; }
+  .patient-card__meta { @apply text-xs text-slate-500 mt-1; }
+  .patient-card__foot { @apply flex items-center gap-4 text-xs text-slate-500; }
+  .patient-card__stat { @apply flex items-center gap-1; }
+
+  .risk-bar { @apply mt-3 h-2 w-full rounded-full overflow-hidden; background: #eef2f6; }
+  .risk-bar__fill {
+    @apply h-full rounded-full;
+    transition: width .5s ease;
+
+    &--critical { background: $grad-critical; }
+    &--high     { background: $grad-high; }
+    &--medium   { background: $grad-medium; }
+    &--low      { background: $grad-low; }
+  }
+
+  /* ── Risk badge ────────────────────────────────── */
+  .risk-badge {
+    @apply inline-flex items-center gap-1.5 rounded-full font-semibold capitalize px-3 py-1 text-sm;
+    border: 1px solid transparent;
+
+    &--sm { @apply px-2 py-0.5 text-xs gap-1; }
+    &__dot { @apply h-2 w-2 rounded-full flex-shrink-0; }
+    &--sm &__dot { @apply h-1.5 w-1.5; }
+    &__score { @apply font-medium; opacity: .7; }
+
+    &--critical { color: #b91c1c; background: #fef2f2; border-color: #fecaca;
+      .risk-badge__dot { background: #dc2626; animation: risk-pulse 1.6s cubic-bezier(.4, 0, .6, 1) infinite; } }
+    &--high     { color: #c2410c; background: #fff7ed; border-color: #fed7aa;
+      .risk-badge__dot { background: #f97316; } }
+    &--medium   { color: #a16207; background: #fefce8; border-color: #fde68a;
+      .risk-badge__dot { background: #f59e0b; } }
+    &--low      { color: #15803d; background: #f0fdf4; border-color: #bbf7d0;
+      .risk-badge__dot { background: #22c55e; } }
+  }
+
+  /* ── Skeleton / empty ──────────────────────────── */
+  .skeleton-card {
+    @apply h-36 rounded-2xl;
+    background: linear-gradient(100deg, #eef2f6 30%, #f8fafc 50%, #eef2f6 70%);
+    background-size: 200% 100%;
+    animation: shimmer 1.4s ease-in-out infinite;
+  }
+  .empty-state        { @apply text-center py-20 text-slate-400; }
+  .empty-state__title { @apply text-lg font-semibold text-slate-500; }
+  .empty-state__hint  { @apply text-sm mt-1; }
+
+  /* ── Chat: floating button + panel ─────────────── */
+  .fab {
+    @apply fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full text-white flex items-center justify-center;
+    background: $grad-brand;
+    box-shadow: $glow-brand;
+    transition: transform .2s ease, box-shadow .2s ease;
+
+    &:hover  { transform: translateY(-2px) scale(1.04); box-shadow: 0 14px 30px -6px rgba(37, 99, 235, .55); }
+    &:active { transform: scale(.96); }
+  }
+
+  .chat-panel {
+    @apply fixed bottom-24 right-6 z-50 w-96 flex flex-col rounded-2xl overflow-hidden;
+    max-height: 600px;
+    border: 1px solid rgba(226, 232, 240, .8);
+    box-shadow: $shadow-lg;
+    @include glass(rgba(255, 255, 255, .92));
+  }
+  .chat-panel__header {
+    @apply text-white px-4 py-3 flex items-center gap-3;
+    background: $grad-sidebar;
+  }
+  .chat-avatar { @apply h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0; background: $grad-brand; }
+  .chat-title  { @apply text-sm font-semibold; }
+  .chat-sub    { @apply text-xs text-slate-400; }
+
+  .chat-role-badge {
+    @apply text-xs px-2 py-0.5 rounded-full font-medium capitalize;
+
+    &--intensivist      { @apply bg-blue-100 text-blue-800; }
+    &--surgeon          { @apply bg-green-100 text-green-800; }
+    &--nurse            { @apply bg-pink-100 text-pink-800; }
+    &--anesthesiologist { @apply bg-purple-100 text-purple-800; }
+    &--lab_technician   { @apply bg-orange-100 text-orange-800; }
+    &--admin            { @apply bg-slate-100 text-slate-600; }
+  }
+
+  .chat-scope {
+    @apply px-4 py-3 text-xs;
+    background: #eff6ff; border-bottom: 1px solid #dbeafe; color: #1e40af;
+
+    &__title { @apply font-semibold mb-0.5; }
+    &__body  { @apply leading-relaxed; color: #1d4ed8; }
+  }
+
+  .chat-body  { @apply flex-1 overflow-y-auto p-4 space-y-3; min-height: 0; }
+  .chat-empty { @apply text-center py-8 text-slate-400; }
+
+  .msg {
+    @apply flex gap-2;
+
+    &--user      { @apply justify-end; }
+    &--assistant { @apply justify-start; }
+    &__avatar {
+      @apply h-6 w-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5;
+
+      &--bot  { background: #e0f2fe; color: #0284c7; }
+      &--user { @apply bg-slate-200 text-slate-600; }
+    }
+    &__bubble {
+      @apply rounded-2xl px-3.5 py-2 text-sm leading-relaxed;
+      max-width: 80%;
+    }
+    &--user .msg__bubble      { @apply text-white rounded-br-sm; background: $grad-brand; }
+    &--assistant .msg__bubble { @apply bg-slate-100 text-slate-800 rounded-bl-sm; }
+  }
+
+  .chat-input-bar {
+    @apply p-3 flex gap-2;
+    border-top: 1px solid #eef2f6;
+    background: rgba(255, 255, 255, .6);
+  }
+  .chat-input {
+    @apply flex-1 text-sm rounded-xl px-3.5 py-2.5 bg-white text-slate-700;
+    border: 1px solid $line;
+    @include focus-ring;
+
+    &:disabled { @apply opacity-50; }
+  }
+  .chat-send {
+    @apply h-10 w-10 rounded-xl text-white flex items-center justify-center flex-shrink-0;
+    background: $grad-brand;
+    transition: all .18s ease;
+
+    &:hover:not(:disabled) { box-shadow: $glow-brand; }
+    &:disabled { @apply opacity-40; }
+  }
+
+  /* ════════════════════════════════════════════════════════════
+     Landing / Auth — dark marketing & sign-in surfaces.
+     Utility classes + animations used by /, /login, /signup.
+     ════════════════════════════════════════════════════════════ */
+  .glass {
+    background: rgba(255, 255, 255, .05);
+    border: 1px solid rgba(255, 255, 255, .10);
+    backdrop-filter: saturate(140%) blur(16px);
+    -webkit-backdrop-filter: saturate(140%) blur(16px);
+  }
+  .glass-dark {
+    background: rgba(2, 6, 23, .72);
+    border-bottom: 1px solid rgba(255, 255, 255, .08);
+    backdrop-filter: saturate(140%) blur(12px);
+    -webkit-backdrop-filter: saturate(140%) blur(12px);
+  }
+  .text-gradient {
+    background: linear-gradient(120deg, #38bdf8 0%, #818cf8 50%, #34d399 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+  .card-hover {
+    transition: transform .3s ease, box-shadow .3s ease, border-color .3s ease;
+
+    &:hover {
+      transform: translateY(-4px);
+      border-color: rgba(255, 255, 255, .22);
+      box-shadow: 0 20px 48px -16px rgba(2, 6, 23, .7);
+    }
+  }
+
+  .reveal {
+    opacity: 0;
+    transform: translateY(26px);
+    transition: opacity .7s ease, transform .7s ease;
+
+    &.visible { opacity: 1; transform: none; }
+  }
+  .delay-1 { transition-delay: .08s; animation-delay: .08s; }
+  .delay-2 { transition-delay: .16s; animation-delay: .16s; }
+  .delay-3 { transition-delay: .24s; animation-delay: .24s; }
+  .delay-4 { transition-delay: .32s; animation-delay: .32s; }
+  .delay-5 { transition-delay: .40s; animation-delay: .40s; }
+  .delay-6 { transition-delay: .48s; animation-delay: .48s; }
+
+  .animate-ecg         { stroke-dasharray: 1400; stroke-dashoffset: 1400; animation: ecg 4s ease-in-out infinite; }
+  .animate-float       { animation: float 4s ease-in-out infinite; }
+  .animate-float-slow  { animation: float-slow 7s ease-in-out infinite; }
+  .animate-glow        { animation: glow 2.6s ease-in-out infinite; }
+  .animate-fade-in     { animation: fade-in .8s ease both; }
+  .animate-fade-in-up  { animation: fade-in-up .8s ease both; }
+  .animate-slide-right { animation: slide-right .9s ease both; }
+  .animate-scale-in    { animation: scale-in .5s ease both; }
+  .animate-bounce-sub  { animation: bounce-sub 2s ease-in-out infinite; }
+  .animate-gradient-x  { background-size: 200% 200%; animation: gradient-x 9s ease infinite; }
+}
+
+// ── Keyframes ─────────────────────────────────────────────────
+@keyframes shimmer     { to { background-position: -200% 0; } }
+@keyframes risk-pulse  { 0%, 100% { opacity: 1; } 50% { opacity: .45; } }
+@keyframes ecg         { 0% { stroke-dashoffset: 1400; } 60%, 100% { stroke-dashoffset: 0; } }
+@keyframes float       { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+@keyframes float-slow  { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(10px, -24px); } }
+@keyframes glow        { 0%, 100% { box-shadow: 0 0 22px rgba(14, 165, 233, .45); } 50% { box-shadow: 0 0 44px rgba(14, 165, 233, .80); } }
+@keyframes fade-in     { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fade-in-up  { from { opacity: 0; transform: translateY(22px); } to { opacity: 1; transform: none; } }
+@keyframes slide-right { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: none; } }
+@keyframes scale-in    { from { opacity: 0; transform: scale(.92); } to { opacity: 1; transform: none; } }
+@keyframes bounce-sub  { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(6px); } }
+@keyframes gradient-x  { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+@keyframes particle-drift { 0%, 100% { transform: translateY(0); opacity: .2; } 50% { transform: translateY(-30px); opacity: .6; } }
