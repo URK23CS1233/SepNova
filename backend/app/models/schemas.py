@@ -20,6 +20,8 @@ class PatientOut(PatientBase):
     created_at: datetime
     latest_risk_score: Optional[float] = None
     latest_risk_level: Optional[str] = None
+    # Latest recorded bedside hour, used by the monitor tiles.
+    latest_vitals: Optional[dict] = None
 
     class Config:
         from_attributes = True
@@ -87,6 +89,15 @@ class PredictionOut(BaseModel):
     lgb_score: float
     model_version: str
     predicted_at: datetime
+    # Phase 1/3: transparent missing-data reporting + SHAP explanation.
+    confidence: Optional[float] = None
+    data_complete: Optional[bool] = None
+    missing_features: list[str] = []
+    imputed_features: Optional[int] = None
+    top_features: list[dict] = []
+    explanation_method: Optional[str] = None
+    # Derived from the artifact's tuned threshold (single source of truth).
+    alert_thresholds: Optional[dict] = None
 
 
 # ── Alerts ───────────────────────────────────────────────────────────────────

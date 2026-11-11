@@ -6,14 +6,36 @@ Unified interface over three artifact generations:
   • v2  — stacking ensemble                  (keys: base_models, meta_model)
   • v3  — stacking + isotonic calibration    (keys: base_models, meta_model, calibrator)
 
-Callers always use the same API:  model.predict(features_dict) -> {risk_score, risk_level, model_version}
-The risk level is derived from the artifact's TUNED threshold (not hardcoded cutoffs).
+Callers always use the same API:
+    model.predict(features_dict) -> {risk_score, risk_level, confidence, ...}
+
+Design decisions (Phase 1 & 3)
+-------------------------------
+* The artifact's tuned `threshold` is the SINGLE source of truth for every risk
+  level and alert cutoff. Nothing in the router hardcodes 0.45/0.70.
+* Missing inputs are NEVER silently treated as normal. Key clinical inputs are
+  tracked and reported in `missing_features`; `confidence` drops accordingly.
+* `explain()` returns real SHAP contributions for the xgb base estimator — no
+  hand-waved "feature importance" numbers.
 """
 import joblib
 import numpy as np
 from pathlib import Path
 from functools import lru_cache
+
 from ..config import get_settings
+
+# Key bedside inputs whose absence should reduce confidence. Maps the clinical
+# label to the raw and engineered feature keys that can carry its value.
+KEY_INPUTS = {
+    "lactate":    ("Lactate", "Lactate_last"),
+    "MAP":        ("MAP", "MAP_last"),
+    "HR":         ("HR", "HR_last"),
+    "RR":         ("RESP", "RESP_last", "Resp", "Resp_last"),
+    "temperature": ("TEMP", "TEMP_last", "Temp", "Temp_last"),
+    "WBC":        ("WBC", "WBC_last"),
+    "creatinine": ("Creatinine", "Creatinine_last"),
+}
 
 
 def score_to_level(score: float, threshold: float) -> str:
@@ -31,6 +53,34 @@ def score_to_level(score: float, threshold: float) -> str:
     if frac < 0.67:
         return "high"
     return "critical"
+
+
+def alert_thresholds_from(threshold: float) -> dict[str, float]:
+    """Derive the three alert cutoffs from the tuned threshold (one source)."""
+    span = max(1.0 - threshold, 1e-6)
+    return {
+        "medium":   round(threshold, 4),
+        "high":     round(threshold + span / 3.0, 4),
+        "critical": round(threshold + 2.0 * span / 3.0, 4),
+    }
+
+
+def feature_label(name: str) -> str:
+    """Turn an engineered feature name into something a clinician can read."""
+    base = name
+    for suffix in ("_last", "_mean", "_max", "_min", "_std", "_range", "_trend", "_pos_in_range"):
+        if base.endswith(suffix):
+            base = base[: -len(suffix)]
+            break
+    custom = {
+        "sirs_count": "SIRS criteria", "sofa_total_proxy": "SOFA proxy",
+        "shock_index": "Shock index", "lactate_x_wbc": "Lactate × WBC",
+        "lactate_x_hr": "Lactate × HR", "flag_high_lactate": "High lactate",
+        "flag_hypotension": "Hypotension", "flag_tachycardia": "Tachycardia",
+        "flag_tachypnea": "Tachypnea", "flag_hypoxia": "Hypoxia",
+        "flag_high_wbc": "High WBC", "flag_aki": "Acute kidney injury",
+    }
+    return custom.get(name, base)
 
 
 class SepNovaModel:
@@ -53,6 +103,8 @@ class SepNovaModel:
             self.xgb = bm.get("xgb")
             self.lgb = bm.get("lgb")
 
+        self._explainer = None   # lazily built SHAP TreeExplainer
+
     @property
     def is_stacked(self) -> bool:
         return bool(self._base_models) and (self._meta_model is not None or self._calibrator is not None)
@@ -61,10 +113,37 @@ class SepNovaModel:
     def trained_at(self):
         return self._artifact.get("trained_at")
 
+    @property
+    def alert_thresholds(self) -> dict[str, float]:
+        return alert_thresholds_from(self.threshold)
+
     def _featurise(self, features: dict):
-        """1-row DataFrame with the exact training column names (avoids LGB warnings)."""
+        """1-row DataFrame with the exact training column names."""
         import pandas as pd
-        return pd.DataFrame([{f: float(features.get(f, 0.0)) for f in self.feature_names}])
+        row = {}
+        for f in self.feature_names:
+            v = features.get(f, 0.0)
+            try:
+                row[f] = float(v) if v is not None else 0.0
+            except (TypeError, ValueError):
+                row[f] = 0.0
+        return pd.DataFrame([row])
+
+    def _missing_key_inputs(self, features: dict) -> list[str]:
+        """Clinical inputs that are absent (or zero) in the supplied feature dict."""
+        missing = []
+        for label, keys in KEY_INPUTS.items():
+            present = False
+            for k in keys:
+                try:
+                    if features.get(k) is not None and float(features.get(k)) > 0:
+                        present = True
+                        break
+                except (TypeError, ValueError):
+                    continue
+            if not present:
+                missing.append(label)
+        return missing
 
     def predict(self, features: dict) -> dict:
         """Score a single patient. features = {feature_name: value, ...}."""
@@ -89,13 +168,60 @@ class SepNovaModel:
         else:
             raise RuntimeError("Model artifact has no usable estimator.")
 
+        missing = self._missing_key_inputs(features)
+        # Report but do not hide imputation: every absent model column is filled
+        # with 0.0 (the training missing-value sentinel).
+        imputed = sum(
+            1 for f in self.feature_names
+            if features.get(f) is None or features.get(f) == 0
+        )
+        confidence = round(max(0.30, 1.0 - 0.12 * len(missing)), 2)
+
         return {
-            "risk_score":    round(score, 4),
-            "risk_level":    score_to_level(score, self.threshold),
-            "xgb_score":     round(xgb_score, 4),
-            "lgb_score":     round(lgb_score, 4),
-            "model_version": self.version,
+            "risk_score":       round(score, 4),
+            "risk_level":       score_to_level(score, self.threshold),
+            "xgb_score":        round(xgb_score, 4),
+            "lgb_score":        round(lgb_score, 4),
+            "model_version":    self.version,
+            "confidence":       confidence,
+            "data_complete":    len(missing) == 0,
+            "missing_features": missing,
+            "imputed_features": int(imputed),
         }
+
+    def explain(self, features: dict, top_k: int = 5) -> list[dict]:
+        """
+        Per-prediction SHAP values for the top contributing features.
+        Uses the xgb base estimator in the shared engineered feature space.
+        """
+        import shap
+
+        x = self._featurise(features)
+        if self.xgb is None:
+            raise RuntimeError("Artifact has no xgb base estimator to explain.")
+        if self._explainer is None:
+            self._explainer = shap.TreeExplainer(self.xgb)
+
+        values = self._explainer.shap_values(x)
+        if isinstance(values, list):                    # some xgboost versions
+            values = values[1] if len(values) > 1 else values[0]
+        arr = np.asarray(values, dtype=float)
+        if arr.ndim == 3:                               # (rows, features, classes)
+            arr = arr[0, :, -1]
+        elif arr.ndim == 2:
+            arr = arr[0]
+
+        order = np.argsort(np.abs(arr))[::-1][:top_k]
+        out = []
+        for idx in order:
+            name = self.feature_names[int(idx)]
+            out.append({
+                "feature": name,
+                "label":   feature_label(name),
+                "value":   float(x.iloc[0, int(idx)]),
+                "shap":    round(float(arr[int(idx)]), 5),
+            })
+        return out
 
     def predict_batch(self, features_list: list[dict]) -> list[dict]:
         return [self.predict(f) for f in features_list]
@@ -109,7 +235,8 @@ def get_model() -> SepNovaModel:
     path = Path(get_settings().model_path)
     if not path.exists():
         raise FileNotFoundError(
-            f"Model artifact not found at {path}.\n"
+            f"Model artifact not found at {path}. "
+            "Trained scores are unavailable — no fabricated score will be returned.\n"
             "  Train it first:  cd backend && python ml/train_v3.py"
         )
     return SepNovaModel(str(path))

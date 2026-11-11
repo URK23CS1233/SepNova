@@ -1,0 +1,30 @@
+# ── Secrets (never commit real credentials) ─────────────────────────────
+.env
+.env.*
+!.env.example
+!.env.local.example
+backend/.env
+backend/.env.*
+!backend/.env.example
+frontend/.env.local
+frontend/.env.*.local
+!frontend/.env.local.example
+
+# ── Python ──────────────────────────────────────────────────────────────
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+
+# ── Frontend build output ───────────────────────────────────────────────
+frontend/.next/
+frontend/node_modules/
+frontend/tsconfig.tsbuildinfo
+
+# ── Model artifacts & generated data (reproducible, large binaries) ─────
+*.pkl
+backend/ml/artifacts/
+outputs/*.parquet
+
+# ── Local scratch ───────────────────────────────────────────────────────
+temp_extract.py

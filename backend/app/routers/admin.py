@@ -8,7 +8,7 @@ from pydantic import BaseModel
 from supabase import Client
 
 from ..auth import CurrentUser, admin_only, log_audit
-from ..database import get_supabase
+from ..database import get_supabase, get_db
 
 router = APIRouter(prefix="/api/v1/admin", tags=["admin"])
 
@@ -33,7 +33,7 @@ class InviteUser(BaseModel):
 @router.get("/users")
 async def list_users(
     user: CurrentUser = Depends(admin_only),
-    db: Client = Depends(get_supabase),
+    db: Client = Depends(get_db),
 ):
     res = db.table("user_profiles").select("*").order("created_at", desc=True).execute()
     return res.data or []
@@ -44,7 +44,7 @@ async def update_user(
     user_id: str,
     body: UserUpdate,
     user: CurrentUser = Depends(admin_only),
-    db: Client = Depends(get_supabase),
+    db: Client = Depends(get_db),
 ):
     if body.role and body.role not in VALID_ROLES:
         raise HTTPException(400, f"Invalid role. Must be one of: {list(VALID_ROLES)}")
@@ -62,7 +62,7 @@ async def update_user(
 async def invite_user(
     body: InviteUser,
     user: CurrentUser = Depends(admin_only),
-    db: Client = Depends(get_supabase),
+    db: Client = Depends(get_db),
 ):
     """
     Invite a new user by email. Supabase sends them a setup link.
@@ -106,7 +106,7 @@ async def invite_user(
 async def deactivate_user(
     user_id: str,
     user: CurrentUser = Depends(admin_only),
-    db: Client = Depends(get_supabase),
+    db: Client = Depends(get_db),
 ):
     """Soft-delete: mark as inactive. Does not delete auth.users record."""
     db.table("user_profiles").update({"is_active": False}).eq("id", user_id).execute()
@@ -118,7 +118,7 @@ async def deactivate_user(
 async def get_audit_log(
     limit: int = 100,
     user: CurrentUser = Depends(admin_only),
-    db: Client = Depends(get_supabase),
+    db: Client = Depends(get_db),
 ):
     res = (
         db.table("audit_log").select("*")

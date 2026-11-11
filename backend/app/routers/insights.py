@@ -10,7 +10,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from supabase import Client
 
 from ..auth import CurrentUser, get_current_user, require_role
-from ..database import get_supabase
+from ..database import get_supabase, get_db
+from ..demo_db import get_demo_db
 from ..models.ml_model import get_model
 from ..inference_features import build_patient_feature_vector as _build_features_dict
 
@@ -54,7 +55,7 @@ def _load_multi_horizon_model(horizon: str):
 async def get_composite_score(
     patient_id: str,
     user: CurrentUser = Depends(clinical_no_lab),
-    db: Client = Depends(get_supabase),
+    db: Client = Depends(get_db),
 ):
     """
     Compute the SepNova Composite Score (SNS) for a patient.
@@ -63,6 +64,8 @@ async def get_composite_score(
     from ml.sofa import sofa_from_rows, sofa_velocity, compute_qsofa
     from ml.composite_score import compute_sns
 
+    if getattr(user, "user_id", None) == "demo-user":
+        db = get_demo_db()
     vitals = db.table("vitals").select("*").eq("patient_id", patient_id).order("hour").execute()
     labs   = db.table("lab_results").select("*").eq("patient_id", patient_id).order("hour").execute()
 
@@ -107,11 +110,13 @@ async def get_composite_score(
 async def get_multi_horizon(
     patient_id: str,
     user: CurrentUser = Depends(clinical_no_lab),
-    db: Client = Depends(get_supabase),
+    db: Client = Depends(get_db),
 ):
     """
     Run all three prediction horizons (3h, 6h, 12h) for a patient.
     """
+    if getattr(user, "user_id", None) == "demo-user":
+        db = get_demo_db()
     features = _build_features_dict(patient_id, db)
     results = {}
     for horizon in ["3h", "6h", "12h"]:
@@ -145,7 +150,7 @@ async def get_multi_horizon(
 async def explain_patient(
     patient_id: str,
     user: CurrentUser = Depends(clinical_no_lab),
-    db: Client = Depends(get_supabase),
+    db: Client = Depends(get_db),
     model=Depends(get_model),
 ):
     """
@@ -153,6 +158,8 @@ async def explain_patient(
     """
     from ml.explainer import explain_patient as _explain
 
+    if getattr(user, "user_id", None) == "demo-user":
+        db = get_demo_db()
     pred = (
         db.table("predictions").select("risk_score,risk_level")
         .eq("patient_id", patient_id).order("predicted_at", desc=True).limit(1).execute()
@@ -182,7 +189,7 @@ async def explain_patient(
 @router.get("/fairness")
 async def fairness_report(
     user: CurrentUser = Depends(intensivist_only),
-    db: Client = Depends(get_supabase),
+    db: Client = Depends(get_db),
 ):
     """
     Live fairness audit using predictions stored in Supabase.
@@ -190,6 +197,8 @@ async def fairness_report(
     """
     from ml.fairness import subgroup_metrics
 
+    if getattr(user, "user_id", None) == "demo-user":
+        db = get_demo_db()
     patients = db.table("patients").select("patient_id,age,gender").execute()
     preds    = (
         db.table("predictions")

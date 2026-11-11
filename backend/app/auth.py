@@ -30,7 +30,9 @@ ROLES = {
 
 # What each role is allowed to read (column-level enforcement in API layer)
 ROLE_ALLOWED_PREDICTION_FIELDS = {
-    "intensivist":      {"risk_score", "risk_level", "xgb_score", "lgb_score", "model_version", "predicted_at"},
+    "intensivist":      {"risk_score", "risk_level", "xgb_score", "lgb_score", "model_version", "predicted_at",
+                          "confidence", "data_complete", "missing_features", "imputed_features",
+                          "top_features", "explanation_method", "alert_thresholds"},
     "surgeon":          {"risk_level", "predicted_at"},
     "nurse":            {"risk_level", "predicted_at"},
     "anesthesiologist": {"risk_level", "predicted_at"},
@@ -71,6 +73,16 @@ async def get_current_user(
     """
     token = credentials.credentials
     settings = get_settings()
+
+    # Demo mode — landing-page "Try Live Demo" enters without any authentication
+    if token == "demo" and settings.demo_mode:
+        return CurrentUser(
+            user_id="demo-user",
+            email="demo@sepnova.app",
+            role="intensivist",
+            ward="ICU",
+            full_name="Demo Clinician",
+        )
 
     try:
         payload = jwt.decode(

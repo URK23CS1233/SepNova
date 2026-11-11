@@ -1,12 +1,18 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
+
+const DemoSignInButton = dynamic(() => import("@/components/DemoSignInButton").then((mod) => mod.DemoSignInButton), {
+  ssr: false,
+});
+
 import {
   Activity, Shield, Brain, Users, ChevronRight, ArrowRight,
   Zap, Eye, Clock, BarChart3, Heart, Lock, Star, CheckCircle
 } from "lucide-react";
 
-/* ─── Animated ECG SVG ────────────────────────────────────────────── */
+
 function ECGLine({ className = "" }: { className?: string }) {
   return (
     <svg viewBox="0 0 1200 120" preserveAspectRatio="none" className={className} fill="none">
@@ -189,6 +195,7 @@ function DashboardMockup() {
 }
 
 /* ─── Main Landing Page ───────────────────────────────────────────── */
+
 export default function LandingPage() {
   useReveal();
   const [navScrolled, setNavScrolled] = useState(false);
@@ -536,6 +543,7 @@ export default function LandingPage() {
               className="flex items-center gap-2 px-8 py-4 rounded-xl border border-white/20 hover:border-white/40 text-white font-semibold text-lg transition-all hover:bg-white/5">
               Sign In
             </Link>
+<DemoSignInButton />
           </div>
         </div>
       </section>

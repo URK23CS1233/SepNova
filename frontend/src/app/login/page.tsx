@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Activity, Eye, EyeOff, ShieldCheck, ArrowLeft, Lock, Mail } from "lucide-react";
@@ -32,7 +32,7 @@ function BgECG() {
   );
 }
 
-export default function LoginPage() {
+function LoginContent() {
   const { signIn, session } = useAuth();
   const router      = useRouter();
   const params      = useSearchParams();
@@ -176,5 +176,14 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+// useSearchParams() must sit inside a Suspense boundary for static prerender.
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-slate-950" />}>
+      <LoginContent />
+    </Suspense>
   );
 }

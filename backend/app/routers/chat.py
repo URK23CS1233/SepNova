@@ -16,9 +16,9 @@ from supabase import Client
 
 from ..auth import (
     CurrentUser, get_current_user, log_audit,
-    ROLE_LLM_SCOPE, clinical_no_lab,
+    ROLE_LLM_SCOPE,
 )
-from ..database import get_supabase
+from ..database import get_supabase, get_db
 from ..config import get_settings
 
 router = APIRouter(prefix="/api/v1/chat", tags=["chat"])
@@ -190,7 +190,7 @@ async def chat(
     req: ChatRequest,
     request: Request,
     user: CurrentUser = Depends(get_current_user),
-    db: Client = Depends(get_supabase),
+    db: Client = Depends(get_db),
 ):
     settings = get_settings()
 

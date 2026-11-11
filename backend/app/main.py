@@ -1,8 +1,9 @@
 from fastapi import FastAPI, Request
+from .database import set_demo_mode, reset_demo_mode
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from .config import get_settings
-from .routers import patients, predictions, alerts, model, chat, admin, insights, ml
+from .routers import patients, predictions, alerts, model, chat, admin, insights, ml, simulate
 
 settings = get_settings()
 
@@ -25,7 +26,12 @@ app.add_middleware(
 # Security headers middleware
 @app.middleware("http")
 async def add_security_headers(request: Request, call_next):
-    response = await call_next(request)
+    auth = (request.headers.get("authorization") or "").strip().lower()
+    token = set_demo_mode(auth == "bearer demo")
+    try:
+        response = await call_next(request)
+    finally:
+        reset_demo_mode(token)
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["X-XSS-Protection"] = "1; mode=block"
@@ -41,6 +47,13 @@ app.include_router(chat.router)
 app.include_router(admin.router)
 app.include_router(insights.router)
 app.include_router(ml.router)
+app.include_router(simulate.router)
+
+
+# A missing/corrupt artifact must fail loudly, never return a fabricated score.
+@app.exception_handler(FileNotFoundError)
+async def model_artifact_missing(request: Request, exc: FileNotFoundError):
+    return JSONResponse(status_code=503, content={"detail": str(exc)})
 
 
 @app.get("/health")

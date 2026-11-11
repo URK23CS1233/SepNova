@@ -26,6 +26,11 @@ export async function middleware(request: NextRequest) {
 
   const path = request.nextUrl.pathname;
 
+  // Demo mode — cookie set by the landing-page demo button grants instant access
+  if (request.cookies.get("sepnova_demo")?.value === "1") {
+    return supabaseResponse;
+  }
+
   // Allow public paths without auth
   const isPublic = PUBLIC_PATHS.some((p) => path === p || (p !== "/" && path.startsWith(p)));
   if (isPublic) {

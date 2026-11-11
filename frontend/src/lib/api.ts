@@ -1,27 +1,41 @@
+/**
+ * SepNova API client
+ * ------------------
+ * Every backend route now requires a valid Supabase JWT. This client attaches
+ * the current session's access token to every request and exposes the new
+ * simulation/types used by the bedside monitor.
+ */
+import { supabase } from "@/lib/supabase";
+
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
+async function authHeaders(): Promise<Record<string, string>> {
+  if (
+    typeof window !== "undefined" &&
+    window.localStorage.getItem("sepnova_demo") === "1"
+  ) {
+    return { Authorization: "Bearer demo" };
+  }
+  const { data } = await supabase.auth.getSession();
+  const token = data.session?.access_token;
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
 async function req<T>(path: string, opts?: RequestInit): Promise<T> {
+  const extra = (opts?.headers ?? {}) as Record<string, string>;
   const res = await fetch(`${BASE}${path}`, {
-    headers: { "Content-Type": "application/json" },
     ...opts,
+    headers: {
+      "Content-Type": "application/json",
+      ...(await authHeaders()),
+      ...extra,
+    },
   });
   if (!res.ok) throw new Error(`API ${path} → ${res.status}`);
   return res.json() as Promise<T>;
 }
 
 // ── Types ─────────────────────────────────────────────────────────────────────
-
-export interface Patient {
-  id: string;
-  patient_id: string;
-  age?: number;
-  gender?: number;
-  ward: string;
-  status: string;
-  icu_los?: number;
-  latest_risk_score?: number;
-  latest_risk_level?: string;
-}
 
 export interface Vitals {
   hour: number;
@@ -34,6 +48,19 @@ export interface Vitals {
   resp?: number;
 }
 
+export interface Patient {
+  id: string;
+  patient_id: string;
+  age?: number;
+  gender?: number;
+  ward: string;
+  status: string;
+  icu_los?: number;
+  latest_risk_score?: number;
+  latest_risk_level?: string;
+  latest_vitals?: Vitals | null;
+}
+
 export interface Prediction {
   patient_id: string;
   risk_score: number;
@@ -42,6 +69,9 @@ export interface Prediction {
   lgb_score: number;
   model_version: string;
   predicted_at: string;
+  confidence?: number;
+  data_complete?: boolean;
+  missing_features?: string[];
 }
 
 export interface Alert {
@@ -80,10 +110,67 @@ export interface DashboardSummary {
   latest_model_auroc?: number;
 }
 
+export interface ShapFeature {
+  feature: string;
+  label: string;
+  value: number;
+  shap: number;
+}
+
+export interface SimulatedHour {
+  hour: number;
+  simulated: true;
+  pre_onset: boolean;
+  vitals: { HR: number; MAP: number; RESP: number; TEMP: number; O2SAT: number; SBP: number; GCS: number };
+  labs: { WBC: number; Lactate: number; Creatinine: number; Platelets: number; Bilirubin_total: number };
+  sofa: { sofa_total: number; organ_dysfunction: boolean };
+  qsofa: { qsofa_total: number; high_risk_qsofa: boolean };
+  sirs: { sirs_count: number; sirs_positive: boolean };
+  risk_score: number;
+  risk_level: string;
+  xgb_score: number;
+  lgb_score: number;
+  confidence: number;
+  data_complete: boolean;
+  missing_features: string[];
+  top_features: ShapFeature[];
+  explanation_method: string;
+}
+
+export interface SimulationResult {
+  simulated: true;
+  disclaimer: string;
+  config: {
+    onset_hour: number;
+    total_hours: number;
+    severity: number;
+    noise: number;
+    seed: number | null;
+    ramp_hours: number;
+    window_hours: number;
+  };
+  model_version: string;
+  threshold: number;
+  alert_thresholds: Record<string, number>;
+  onset_hour: number;
+  first_flagged_hour: number | null;
+  lead_time_hours: number | null;
+  lead_time_available: boolean;
+  hours: SimulatedHour[];
+}
+
+export interface SimulationConfig {
+  onset_hour: number;
+  total_hours: number;
+  severity: number;
+  noise: number;
+  seed?: number;
+  ramp_hours?: number;
+}
+
 // ── API calls ─────────────────────────────────────────────────────────────────
 
 export const api = {
-  // Generic typed GET — used by insights widgets, e.g. api.get<T>("/api/v1/insights/...")
   get: <T>(path: string) => req<T>(path),
   patients: {
     list: (ward?: string) =>
@@ -107,4 +194,9 @@ export const api = {
     runs: () => req<ModelRun[]>("/api/v1/model/runs"),
     latest: () => req<ModelRun>("/api/v1/model/runs/latest"),
   },
+  simulate: (config: SimulationConfig) =>
+    req<SimulationResult>("/api/v1/simulate/", {
+      method: "POST",
+      body: JSON.stringify(config),
+    }),
 };

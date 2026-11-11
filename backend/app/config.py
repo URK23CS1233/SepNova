@@ -6,8 +6,10 @@ class Settings(BaseSettings):
     supabase_url: str
     supabase_service_key: str
     supabase_jwt_secret: str          # Settings → API → JWT Secret in Supabase dashboard
-    model_path: str = "./ml/artifacts/sepnova_model.pkl"
+    # Phase 3: the calibrated v3 artifact is the only served scoring model.
+    model_path: str = "./ml/artifacts/sepnova_model_v3.pkl"
     allowed_origins: str = "http://localhost:3000"
+    demo_mode: bool = True            # Allows "Bearer demo" tokens without Supabase auth
 
     # LLM
     llm_provider: str = "anthropic"   # "anthropic" or "openai"

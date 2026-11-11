@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Activity, LayoutDashboard, Bell, BarChart3, FlaskConical, Settings, LogOut, Lightbulb } from "lucide-react";
+import { Activity, LayoutDashboard, Bell, BarChart3, FlaskConical, Settings, LogOut, Lightbulb, PlayCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -16,6 +16,7 @@ const ROLE_AVATAR: Record<string, string> = {
 
 const ALL_NAV = [
   { href: "/dashboard", label: "Ward Overview", icon: LayoutDashboard, roles: ["intensivist","surgeon","nurse","anesthesiologist"] },
+  { href: "/simulate", label: "Simulation",    icon: PlayCircle,    roles: ["intensivist","surgeon","nurse","anesthesiologist"] },
   { href: "/alerts",   label: "Alerts",        icon: Bell,          roles: ["intensivist","surgeon","nurse","anesthesiologist"] },
   { href: "/labs",     label: "Lab Results",   icon: FlaskConical,  roles: ["intensivist","nurse","lab_technician","anesthesiologist","surgeon"] },
   { href: "/results",  label: "Model Results", icon: BarChart3,     roles: ["intensivist"] },

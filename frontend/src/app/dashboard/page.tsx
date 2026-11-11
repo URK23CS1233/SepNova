@@ -1,17 +1,33 @@
+/**
+ * Ward Bedside Monitor
+ * --------------------
+ * Replaces the generic admin dashboard with a clinical monitor layout:
+ * dark palette, one tile per ICU bed with schematic ECG/SpO₂ sweeps, large
+ * numeric vitals, a risk gauge, and a top status strip.
+ */
 "use client";
-import { useEffect, useState } from "react";
+
+import { CSSProperties, useEffect, useState } from "react";
 import { api, Patient, DashboardSummary } from "@/lib/api";
-import { PatientCard } from "@/components/PatientCard";
-import { StatCard } from "@/components/StatCard";
+import { BedTile } from "@/components/BedTile";
+import { StatusStrip } from "@/components/StatusStrip";
 import { RefreshCw, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export default function WardOverview() {
+const COLORS = {
+  total: "#3ad6e0",
+  critical: "#ff4d55",
+  high: "#fb7d21",
+  medium: "#f2b632",
+  low: "#3be477",
+};
+
+export default function WardMonitor() {
   const [patients, setPatients] = useState<Patient[]>([]);
-  const [summary, setSummary]   = useState<DashboardSummary | null>(null);
-  const [loading, setLoading]   = useState(true);
-  const [search, setSearch]     = useState("");
-  const [filter, setFilter]     = useState<string>("all");
+  const [summary, setSummary] = useState<DashboardSummary | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState("all");
 
   async function load() {
     setLoading(true);
@@ -26,94 +42,116 @@ export default function WardOverview() {
     }
   }
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+    // Keep the bedside monitor fresh without a manual refresh.
+    const timer = window.setInterval(load, 30000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   const filtered = patients.filter((p) => {
-    const matchSearch =
-      !search || p.patient_id.toLowerCase().includes(search.toLowerCase());
+    const matchSearch = !search || p.patient_id.toLowerCase().includes(search.toLowerCase());
     const matchFilter = filter === "all" || p.latest_risk_level === filter;
     return matchSearch && matchFilter;
   });
 
   const ORDER = ["critical", "high", "medium", "low"];
-  filtered.sort((a, b) =>
-    ORDER.indexOf(a.latest_risk_level ?? "low") -
-    ORDER.indexOf(b.latest_risk_level ?? "low")
+  filtered.sort(
+    (a, b) =>
+      ORDER.indexOf(a.latest_risk_level ?? "low") - ORDER.indexOf(b.latest_risk_level ?? "low")
   );
 
+  const ward = patients[0]?.ward ?? "ICU-A";
+
   return (
-    <div className="page">
-      <div className="page-header">
-        <div>
-          <h1 className="page-title">Ward Overview</h1>
-          <p className="page-subtitle">
-            Real-time sepsis risk monitoring — all active ICU patients
-          </p>
+    <div className="bedside">
+      <StatusStrip
+        ward={ward}
+        alarmCount={summary?.unacknowledged_alerts ?? 0}
+        criticalCount={summary?.critical_count ?? 0}
+      />
+
+      <div className="monitor-page">
+        <div className="monitor-head">
+          <div>
+            <h1 className="monitor-title">Ward Bedside Monitor</h1>
+            <p className="monitor-sub">
+              Decision support, not diagnosis · sepsis risk refreshed every 30s
+            </p>
+          </div>
+          <button type="button" onClick={load} className="monitor-btn">
+            <RefreshCw size={14} className={cn(loading && "animate-spin")} aria-hidden="true" />
+            Refresh
+          </button>
         </div>
-        <button onClick={load} className="btn btn--ghost">
-          <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
-          Refresh
-        </button>
+
+        {summary && (
+          <div className="monitor-stats">
+            {[
+              { label: "Beds", value: summary.total_patients, color: COLORS.total },
+              { label: "Critical", value: summary.critical_count, color: COLORS.critical },
+              { label: "High", value: summary.high_risk_count, color: COLORS.high },
+              { label: "Medium", value: summary.medium_risk_count, color: COLORS.medium },
+              { label: "Low", value: summary.low_risk_count, color: COLORS.low },
+            ].map((s) => (
+              <div
+                key={s.label}
+                className="monitor-stat"
+                style={{ "--stat": s.color } as CSSProperties}
+              >
+                <div className="monitor-stat__label">{s.label}</div>
+                <div className="monitor-stat__value">{s.value}</div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="monitor-toolbar">
+          <div className="monitor-search">
+            <Search aria-hidden="true" />
+            <input
+              type="search"
+              placeholder="Search bed / patient ID…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              aria-label="Search patients"
+            />
+          </div>
+          <div className="monitor-filter" role="group" aria-label="Filter by risk level">
+            {["all", "critical", "high", "medium", "low"].map((f) => (
+              <button
+                key={f}
+                type="button"
+                onClick={() => setFilter(f)}
+                className={cn(filter === f && "is-active")}
+                aria-pressed={filter === f}
+              >
+                {f}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {loading && patients.length === 0 ? (
+          <div className="bed-grid" aria-busy="true">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="monitor-empty">
+                Loading bed…
+              </div>
+            ))}
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="monitor-empty">
+            No beds match this search or filter.
+          </div>
+        ) : (
+          <div className="bed-grid">
+            {filtered.map((p) => (
+              <BedTile key={p.patient_id} patient={p} />
+            ))}
+          </div>
+        )}
       </div>
-
-      {summary && (
-        <div className="stats-grid">
-          <StatCard label="Total Patients" value={summary.total_patients} accent="blue" />
-          <StatCard label="Critical" value={summary.critical_count} accent="red" />
-          <StatCard label="High Risk" value={summary.high_risk_count} accent="orange" />
-          <StatCard label="Medium Risk" value={summary.medium_risk_count} accent="yellow" />
-          <StatCard label="Low Risk" value={summary.low_risk_count} accent="green" />
-          <StatCard
-            label="Open Alerts"
-            value={summary.unacknowledged_alerts}
-            sub={summary.latest_model_auroc ? `AUROC ${summary.latest_model_auroc.toFixed(3)}` : undefined}
-            accent="blue"
-          />
-        </div>
-      )}
-
-      <div className="toolbar">
-        <div className="search">
-          <Search className="search__icon" />
-          <input
-            type="text"
-            placeholder="Search patient ID…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="search__input"
-          />
-        </div>
-        <div className="filter-group">
-          {["all", "critical", "high", "medium", "low"].map((f) => (
-            <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className={cn("filter-pill", filter === f && "filter-pill--active")}
-            >
-              {f}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {loading ? (
-        <div className="patient-grid">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="skeleton-card" />
-          ))}
-        </div>
-      ) : filtered.length === 0 ? (
-        <div className="empty-state">
-          <p className="empty-state__title">No patients found</p>
-          <p className="empty-state__hint">Try adjusting your search or filter.</p>
-        </div>
-      ) : (
-        <div className="patient-grid">
-          {filtered.map((p) => (
-            <PatientCard key={p.patient_id} patient={p} />
-          ))}
-        </div>
-      )}
     </div>
   );
 }

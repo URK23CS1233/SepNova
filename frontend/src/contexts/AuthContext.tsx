@@ -3,6 +3,18 @@ import { createContext, useContext, useEffect, useState, ReactNode } from "react
 import { supabase } from "@/lib/supabase";
 import type { Session, User } from "@supabase/supabase-js";
 
+export const DEMO_PROFILE: UserProfile = {
+  id: "demo-user",
+  full_name: "Demo Clinician",
+  role: "intensivist",
+  is_active: true,
+};
+
+export function isDemoMode(): boolean {
+  if (typeof window === "undefined") return false;
+  return window.localStorage.getItem("sepnova_demo") === "1";
+}
+
 export type UserRole =
   | "intensivist"
   | "surgeon"
@@ -48,6 +60,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   useEffect(() => {
+    if (isDemoMode()) {
+      setSession({ user: { id: "demo-user", email: "demo@sepnova.app" } } as unknown as Session);
+      setProfile(DEMO_PROFILE);
+      setLoading(false);
+      return;
+    }
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       if (session?.user) fetchProfile(session.user.id);
@@ -75,11 +93,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function signOut() {
+    if (isDemoMode()) {
+      window.localStorage.removeItem("sepnova_demo");
+      document.cookie = "sepnova_demo=; path=/; max-age=0; SameSite=Lax";
+      setProfile(null);
+      setSession(null);
+      window.location.href = "/";
+      return;
+    }
     await supabase.auth.signOut();
     setProfile(null);
   }
 
   function hasRole(...roles: UserRole[]): boolean {
+    if (isDemoMode()) return roles.includes(DEMO_PROFILE.role);
     return profile?.role ? roles.includes(profile.role) : false;
   }
 

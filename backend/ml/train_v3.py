@@ -227,6 +227,26 @@ def nested_meta_oof(oof_df, y, groups):
     return cal_oof
 
 
+def reliability_table(y_true, y_prob, n_bins=10):
+    """Binned predicted-vs-observed rates for the calibration report."""
+    edges = np.linspace(0.0, 1.0, n_bins + 1)
+    table = []
+    for i in range(n_bins):
+        lo, hi = float(edges[i]), float(edges[i + 1])
+        mask = (y_prob >= lo) & ((y_prob < hi) if i < n_bins - 1 else (y_prob <= hi))
+        count = int(mask.sum())
+        if count == 0:
+            continue
+        table.append({
+            "bin_lower":     round(lo, 2),
+            "bin_upper":     round(hi, 2),
+            "mean_predicted": round(float(y_prob[mask].mean()), 4),
+            "observed_rate":  round(float(y_true[mask].mean()), 4),
+            "count":          count,
+        })
+    return table
+
+
 def find_best_threshold(y_true, y_prob, min_sensitivity=0.65):
     prec, rec, thr = precision_recall_curve(y_true, y_prob)
     best_t, best_spec = 0.40, -1.0
@@ -283,6 +303,7 @@ def train(data_path, n_trials=30, push_supabase=False):
         "n_features":  int(X.shape[1]),
         "horizon_hours": 6,
         "window_hours":  6,
+        "reliability":   reliability_table(y, cal_oof),
     }
 
     # Served stack: meta + isotonic calibrator fit on the FULL base-OOF matrix, and base
